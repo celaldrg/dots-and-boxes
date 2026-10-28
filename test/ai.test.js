@@ -13,6 +13,8 @@ const CHAIN_A_LINES = [16, 17, 7, 21, 20];
 // A loop of the four top-left boxes and a chain of the other five.
 const LOOP_AND_CHAIN = [0, 1, 12, 16, 6, 7, 14, 18, 15, 19, 23, 11, 10, 9];
 // 5 x 5, player 1 starts: 22 safe lines drawn at random (seed 1), 15 safe lines left.
+// 5 x 5, player 1 starts: 21 safe lines drawn at random (seed 38), 19 safe lines left.
+const EARLY_RACE = [43, 51, 3, 47, 48, 19, 26, 9, 57, 20, 30, 6, 39, 27, 28, 52, 4, 38, 59, 33, 54];
 const PARITY_RACE = [37, 0, 31, 58, 57, 16, 38, 44, 25, 59, 26, 32, 9, 21, 13, 8, 27, 3, 19, 47, 15, 10];
 
 function drawnSides(game, box) {
@@ -209,6 +211,31 @@ test('hard wins the race for control with up to 18 safe lines left', () => {
   for (let seed = 1; seed <= 8; seed++) {
     assert.equal(chooseMove(game.topology, game.lines, 'hard', createRng(seed)), 17, `seed ${seed}`);
   }
+});
+
+test('with too many safe lines to search, hard still picks race-winning lines by playouts', (t) => {
+  // 19 safe lines is past the exact search; playing each one out, hard
+  // against hard, shows that only 3 of them win. A random safe line would
+  // pick one of those about 1 time in 6.
+  const start = () => gameWith(EARLY_RACE, 1, 5);
+  const game = start();
+  const safe = safeLinesOf(game);
+  assert.equal(safe.length, 19);
+  const winners = safe.filter((line) => {
+    const trial = start();
+    playLine(trial, line);
+    const scores = finish(trial, ['hard', 'hard']);
+    return scores[game.turn] > scores[1 - game.turn];
+  });
+  assert.equal(winners.length, 3);
+  let hits = 0;
+  for (let seed = 1; seed <= 8; seed++) {
+    const line = chooseMove(game.topology, game.lines, 'hard', createRng(seed));
+    assert.ok(safe.includes(line), `seed ${seed}: ${line} is not a safe line`);
+    if (winners.includes(line)) hits++;
+  }
+  t.diagnostic(`hard picked a winning line ${hits}/8 times`);
+  assert.ok(hits >= 6, `hard picked a winning line only ${hits}/8 times`);
 });
 
 test('hard never draws a third side while a safe line exists', () => {

@@ -149,6 +149,18 @@ test('lineForPoint picks the nearest undrawn line but not through a drawn one', 
   assert.equal(lineForPoint(topology, 9, 9, isOpen), -1, 'far outside the board');
 });
 
+test('lineForPoint ignores a tap in the middle of a box with several undrawn sides', () => {
+  const n = 3;
+  const topology = getTopology(n);
+  const isOpen = () => true;
+  assert.equal(lineForPoint(topology, 1.5, 1.5, isOpen), -1, 'the exact centre');
+  assert.equal(lineForPoint(topology, 1.55, 1.45, isOpen), -1, 'near the centre');
+  assert.equal(lineForPoint(topology, 1.4, 1.42, isOpen), -1, 'about as close to two sides');
+  assert.equal(lineForPoint(topology, 1.5, 1.32, isOpen), hLine(n, 1, 1), 'clearly nearer the top side');
+  assert.equal(lineForPoint(topology, 1.5, 1.2, isOpen), hLine(n, 1, 1));
+  assert.equal(lineForPoint(topology, 1.15, 1.1, isOpen) >= 0, true, 'near a dot a tap still draws');
+});
+
 test('lineForPoint finds the last side of a box from its centre', () => {
   const n = 3;
   const topology = getTopology(n);

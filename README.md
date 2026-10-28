@@ -19,7 +19,7 @@ dependencies.
 - Three computer levels:
   - **Easy** takes free boxes but sometimes gives boxes away.
   - **Medium** never hands over a box while a safe line is left. When it has to, it opens the shortest chain.
-  - **Hard** counts chains to win the endgame. It plays the long-chain rule, keeps control by double-dealing and opens chains and loops in the best order. In the tests it beats Medium in at least 35 of 50 games.
+  - **Hard** counts chains to win the endgame. It plays the long-chain rule (searching the last safe lines and sampling random playouts earlier on), keeps control by double-dealing and opens chains and loops in the best order. In the tests it beats Medium in at least 35 of 50 games.
 - The last line is highlighted. Closed boxes get the owner's colour and initial, with a short pulse.
 - Undo. Against the computer it takes back your last line and the computer's reply.
 - A move list with line names such as `a1-b1`: columns are letters from the left and rows are numbers from the top.
@@ -37,7 +37,7 @@ Once every line is drawn, the player with more boxes wins.
 
 | | Draw a line | Other |
 | --- | --- | --- |
-| **Touch** | Tap near the line. The nearest free line within half a box is drawn. Hold your finger down to see a preview, slide to change it, and lift to draw. | Buttons for **Undo**, **Restart** and **New game** |
+| **Touch** | Tap near the line. The nearest free line within half a box is drawn; a tap in the middle of a box with several free sides draws nothing. Hold your finger down to see a preview, slide to change it, and lift to draw. | Buttons for **Undo**, **Restart** and **New game** |
 | **Mouse** | Hover to see a preview, click to draw | The same buttons |
 | **Keyboard** | <kbd>Tab</kbd> to the board. The arrow keys move the cursor and <kbd>Enter</kbd> or <kbd>Space</kbd> draws the line. | <kbd>U</kbd> or <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Z</kbd> undoes and <kbd>N</kbd> opens **New game** |
 
@@ -69,7 +69,7 @@ You need Node.js 22 or newer. There is nothing to install. The tests cover:
 - the rules, turns, undo and results;
 - board geometry, hit-testing and the keyboard cursor;
 - the chain and loop analysis;
-- every computer level, including brute-force checks of the Hard player on small endgames, a middle game it must win on chain parity, and a timing budget on 7 × 7;
+- every computer level, including brute-force checks of the Hard player on small endgames, middle games it must win on chain parity (with and without the exact search), and a timing budget on 7 × 7;
 - the demo position, the saved record, the setup, the translations and the storage helper;
 - static checks of the page.
 
@@ -125,7 +125,7 @@ Derleme adımı ve bağımlılığı yoktur.
 - Üç bilgisayar seviyesi:
   - **Kolay** boştaki kutuları alır ama bazen kutu verir.
   - **Orta** güvenli çizgi kaldıkça kutu vermez. Vermek zorunda kalınca en kısa zinciri açar.
-  - **Zor** oyun sonunu kazanmak için zincirleri sayar. Uzun zincir kuralını uygular, kontrolü elinde tutmak için gerektiğinde son kutuları rakibe bırakır ve zincirleri en iyi sırayla açar. Testlerde 50 oyunun en az 35'inde Orta'yı yener.
+  - **Zor** oyun sonunu kazanmak için zincirleri sayar. Uzun zincir kuralını uygular (son güvenli çizgileri tarar, daha önce rastgele deneme oyunlarıyla seçer), kontrolü elinde tutmak için gerektiğinde son kutuları rakibe bırakır ve zincirleri en iyi sırayla açar. Testlerde 50 oyunun en az 35'inde Orta'yı yener.
 - Son çizilen çizgi vurgulanır. Kapanan kutu, sahibinin rengini ve baş harfini kısa bir animasyonla alır.
 - Geri al. Bilgisayara karşı son çizginle birlikte bilgisayarın cevabını da geri alır.
 - `a1-b1` gibi çizgi adlarıyla hamle listesi: sütunlar soldan harf, satırlar yukarıdan sayıdır.
@@ -141,7 +141,7 @@ Derleme adımı ve bağımlılığı yoktur.
 bir kutuyu tamamlarsa kutu senindir ve yeniden çizersin. Bütün çizgiler
 çizildiğinde daha çok kutusu olan kazanır.
 
-- **Dokunmatik:** Çizginin yakınına dokun. Yarım kutu mesafedeki en yakın boş çizgi çizilir. Parmağını basılı tutarsan önizlemeyi görürsün, kaydırarak değiştirebilir, kaldırınca çizersin.
+- **Dokunmatik:** Çizginin yakınına dokun. Yarım kutu mesafedeki en yakın boş çizgi çizilir; birden çok kenarı boş bir kutunun ortasına dokunmak çizgi çizmez. Parmağını basılı tutarsan önizlemeyi görürsün, kaydırarak değiştirebilir, kaldırınca çizersin.
 - **Fare:** Önizleme için üzerine gel, çizmek için tıkla.
 - **Klavye:** <kbd>Tab</kbd> ile tahtaya geç. Ok tuşları imleci taşır, <kbd>Enter</kbd> ya da <kbd>Boşluk</kbd> çizgiyi çizer. <kbd>U</kbd> veya <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Z</kbd> geri alır, <kbd>N</kbd> **Yeni oyun** penceresini açar.
 
@@ -173,7 +173,7 @@ Node.js 22 veya üstü gerekir, ayrıca bir şey kurmaya gerek yoktur. Testler
 - kurallar, sıra, geri alma ve sonuç;
 - tahta geometrisi, dokunma noktasından çizgi bulma ve klavye imleci;
 - zincir ve döngü analizi;
-- bütün bilgisayar seviyeleri: küçük oyun sonlarında Zor seviyenin kaba kuvvetle doğrulanması, zincir paritesiyle kazanması gereken bir oyun ortası ve 7 × 7'de süre sınırı dahil;
+- bütün bilgisayar seviyeleri: küçük oyun sonlarında Zor seviyenin kaba kuvvetle doğrulanması, zincir paritesiyle kazanması gereken oyun ortaları (tam aramayla ve aramasız) ve 7 × 7'de süre sınırı dahil;
 - demo pozisyonu, kayıtlı sonuçlar, ayarlar, çeviriler ve depolama yardımcısı;
 - sayfanın statik kontrolleri.
 

@@ -129,10 +129,17 @@ export function lineAt(topology, x, y, accept = () => true) {
   return best;
 }
 
+/** Taps farther than this from every line (in cells) are near a box centre. */
+const CENTRE_DISTANCE = 0.3;
+/** Near a box centre, the nearest undrawn line must win by at least this much. */
+const CENTRE_MARGIN = 0.1;
+
 /**
  * The undrawn line a tap or click at (x, y) points at: the nearest undrawn
  * line within half a cell, unless a drawn line is clearly closer to the point,
- * so that tapping a drawn line does not draw one of its neighbours.
+ * so that tapping a drawn line does not draw one of its neighbours. Near the
+ * middle of a box, where two undrawn sides are about as close, the tap is
+ * ambiguous and draws nothing.
  * @param {Topology} topology
  * @param {number} x point in dot units
  * @param {number} y point in dot units
@@ -143,9 +150,14 @@ export function lineAt(topology, x, y, accept = () => true) {
 export function lineForPoint(topology, x, y, isOpen, slack = 0.2) {
   const open = lineAt(topology, x, y, isOpen);
   if (open < 0) return -1;
+  const distance = distanceToLine(lineGeometry(topology, open), x, y);
+  if (distance > CENTRE_DISTANCE) {
+    const rival = lineAt(topology, x, y, (line) => line !== open && isOpen(line));
+    if (rival >= 0 && distanceToLine(lineGeometry(topology, rival), x, y) - distance < CENTRE_MARGIN) return -1;
+  }
   const nearest = lineAt(topology, x, y);
   if (nearest === open || isOpen(nearest)) return open;
-  const gap = distanceToLine(lineGeometry(topology, open), x, y) - distanceToLine(lineGeometry(topology, nearest), x, y);
+  const gap = distance - distanceToLine(lineGeometry(topology, nearest), x, y);
   return gap <= slack ? open : -1;
 }
 

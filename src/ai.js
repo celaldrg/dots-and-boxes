@@ -5,10 +5,12 @@
  *   side of a box most of the time;
  * - medium: always takes free boxes, never draws a third side while a safe line
  *   exists, and when forced opens the chain that gives away the fewest boxes;
- * - hard: like medium while safe lines remain, but searches the last safe
- *   moves for the right chain parity, and in the endgame uses chain and loop
- *   analysis: it keeps control by double-dealing when that pays and opens
- *   chains in the best order (a node-capped search handles junctions).
+ * - hard: like medium while safe lines remain, but steers the race for chain
+ *   parity: it searches the last safe moves exactly and, earlier on, scores
+ *   each safe line by random playouts of the safe phase. In the endgame it
+ *   uses chain and loop analysis: it keeps control by double-dealing when
+ *   that pays and opens chains in the best order (a node-capped search
+ *   handles junctions).
  */
 import { pick } from './rng.js';
 import {
@@ -41,6 +43,13 @@ const PARITY_SEARCH_LIMIT = 18;
 /** Node caps keep every hard move well under 300 ms on a 7 x 7 board. */
 const PARITY_NODE_CAP = 12000;
 const ENDGAME_NODE_CAP = 20000;
+/**
+ * Work budget for the safe-phase playouts of one hard move, counted as safe
+ * lines checked; a playout from s safe lines checks about s * s / 2.
+ */
+const PLAYOUT_WORK = 40000;
+const MIN_PLAYOUTS_PER_LINE = 2;
+
 
 /**
  * Chooses a line for the player to move.
@@ -84,7 +93,51 @@ function hardMove(position, rng) {
     const best = bestSafeLines(position, safe);
     if (best) return pick(rng, best);
   }
-  return pick(rng, safe);
+  return pick(rng, bestByPlayouts(position, safe, rng));
+}
+
+/**
+ * Scores each safe line by random playouts: both sides draw random safe lines
+ * until none is left, and the endgame that results is estimated for the
+ * player who must then open a chain. Returns the lines with the best average.
+ */
+function bestByPlayouts(position, safe, rng) {
+  const playouts = Math.max(MIN_PLAYOUTS_PER_LINE, Math.floor((2 * PLAYOUT_WORK) / safe.length ** 3));
+  let bestScore = -Infinity;
+  let best = [];
+  for (const line of safe) {
+    drawLine(position, line);
+    let total = 0;
+    for (let i = 0; i < playouts; i++) total += playout(position, safe, rng);
+    eraseLine(position, line);
+    if (total > bestScore) {
+      bestScore = total;
+      best = [line];
+    } else if (total === bestScore) {
+      best.push(line);
+    }
+  }
+  return best;
+}
+
+/**
+ * Plays random safe lines until none is left (the opponent moves first), then
+ * restores the position. Returns the endgame value for the player who drew
+ * the line before the playout.
+ */
+function playout(position, candidates, rng) {
+  const played = [];
+  let moves = safeLines(position, candidates);
+  while (moves.length > 0) {
+    const line = pick(rng, moves);
+    drawLine(position, line);
+    played.push(line);
+    moves = safeLines(position, moves);
+  }
+  const sign = played.length % 2 === 0 ? -1 : 1;
+  const score = sign * estimateValue(position);
+  for (let i = played.length - 1; i >= 0; i--) eraseLine(position, played[i]);
+  return score;
 }
 
 /** Lines that hand the opponent the fewest boxes, counting greedy captures. */
