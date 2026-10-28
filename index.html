@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Dots and Boxes</title>
+  <meta name="description" content="Dots and Boxes in the browser: draw lines, close boxes and outplay a computer that knows the long-chain rule, or play a friend on one device.">
+  <meta name="theme-color" content="#0f172a">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Dots and Boxes">
+  <meta property="og:description" content="Draw lines, close boxes and outplay a computer that knows the long-chain rule. Free, open source, made for phones and keyboards.">
+  <meta property="og:url" content="https://celaldrg.github.io/dots-and-boxes/">
+  <meta property="og:image" content="https://celaldrg.github.io/dots-and-boxes/docs/screenshot.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f172a'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%23f472b6' fill-opacity='.35'/%3E%3Cpath d='M8 8h8v8H8z' fill='none' stroke='%23f472b6' stroke-width='2.6' stroke-linejoin='round'/%3E%3Cpath d='M16 24h8' stroke='%23fbbf24' stroke-width='2.6' stroke-linecap='round'/%3E%3Cg fill='%23e2e8f0'%3E%3Ccircle cx='8' cy='8' r='2.2'/%3E%3Ccircle cx='16' cy='8' r='2.2'/%3E%3Ccircle cx='24' cy='8' r='2.2'/%3E%3Ccircle cx='8' cy='16' r='2.2'/%3E%3Ccircle cx='16' cy='16' r='2.2'/%3E%3Ccircle cx='24' cy='16' r='2.2'/%3E%3Ccircle cx='8' cy='24' r='2.2'/%3E%3Ccircle cx='16' cy='24' r='2.2'/%3E%3Ccircle cx='24' cy='24' r='2.2'/%3E%3C/g%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect width="32" height="32" rx="8" fill="#1e293b"/>
+        <rect x="8" y="8" width="8" height="8" fill="#f472b6" fill-opacity=".35"/>
+        <path d="M8 8h8v8H8z" fill="none" stroke="#f472b6" stroke-width="2.6" stroke-linejoin="round"/>
+        <path d="M16 24h8" stroke="#fbbf24" stroke-width="2.6" stroke-linecap="round"/>
+        <g fill="#e2e8f0">
+          <circle cx="8" cy="8" r="2.2"/><circle cx="16" cy="8" r="2.2"/><circle cx="24" cy="8" r="2.2"/>
+          <circle cx="8" cy="16" r="2.2"/><circle cx="16" cy="16" r="2.2"/><circle cx="24" cy="16" r="2.2"/>
+          <circle cx="8" cy="24" r="2.2"/><circle cx="16" cy="24" r="2.2"/><circle cx="24" cy="24" r="2.2"/>
+        </g>
+      </svg>
+      <h1 data-i18n="title">Dots and Boxes</h1>
+    </div>
+    <div class="topbar-actions">
+      <button id="new-game" class="btn btn-accent" type="button" data-i18n="newGame">New game</button>
+      <button id="lang" class="btn btn-ghost btn-lang" type="button" data-i18n="langButton" data-i18n-label="langLabel" aria-label="TR: switch to Turkish">TR</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="scores" data-i18n-label="scoresLabel" aria-label="Scores">
+      <div id="player-0" class="player p0">
+        <span id="avatar-0" class="avatar" aria-hidden="true">Y</span>
+        <span class="player-info">
+          <span id="name-0" class="player-name">You</span>
+          <span id="detail-0" class="player-detail" hidden></span>
+        </span>
+        <span id="score-0" class="player-score">0</span>
+      </div>
+      <div id="player-1" class="player p1">
+        <span id="avatar-1" class="avatar" aria-hidden="true">C</span>
+        <span class="player-info">
+          <span id="name-1" class="player-name">Computer</span>
+          <span id="detail-1" class="player-detail" hidden></span>
+        </span>
+        <span id="score-1" class="player-score">0</span>
+      </div>
+      <p id="status" class="status" role="status"></p>
+    </section>
+
+    <section class="board-area">
+      <div id="board-frame" class="board-frame">
+        <div id="board" class="board" tabindex="0" role="application" aria-label="Board" aria-describedby="board-help"></div>
+        <div id="overlay" class="overlay" hidden>
+          <div class="result-card" role="group" aria-labelledby="result-title">
+            <p class="result-kicker" data-i18n="gameOver">Game over</p>
+            <h2 id="result-title" class="result-title"></h2>
+            <p id="result-score" class="result-score"></p>
+            <p id="result-record" class="result-record"></p>
+            <div class="result-actions">
+              <button id="play-again" class="btn btn-accent" type="button" data-i18n="playAgain">Play again</button>
+              <button id="change-setup" class="btn" type="button" data-i18n="changeSetup">Change setup</button>
+            </div>
+            <button id="show-board" class="btn btn-link" type="button" data-i18n="showBoard">Show board</button>
+          </div>
+        </div>
+      </div>
+      <p id="board-help" class="visually-hidden" data-i18n="boardHelp">Arrow keys choose a line, Enter or Space draws it.</p>
+      <p id="cursor-live" class="visually-hidden" aria-live="polite"></p>
+    </section>
+
+    <section class="actions">
+      <button id="undo" class="btn" type="button" disabled>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 5 4 10l5 5"/><path d="M4 10h10a6 6 0 0 1 0 12h-3"/></svg>
+        <span data-i18n="undo">Undo</span>
+      </button>
+      <button id="restart" class="btn" type="button">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>
+        <span data-i18n="restart">Restart</span>
+      </button>
+      <p class="hint hint-touch" data-i18n="hintTouch">Tap near a line between two dots to draw it.</p>
+      <p class="hint hint-keys" data-i18n="hintKeys">Click a line, or use the arrow keys and Enter. U undoes, N opens a new game.</p>
+    </section>
+
+    <section class="card history" aria-labelledby="history-title">
+      <div class="card-head">
+        <h2 id="history-title" data-i18n="moves">Moves</h2>
+        <span id="move-count" class="count" hidden></span>
+      </div>
+      <ol id="history" class="history-list" hidden></ol>
+      <p id="history-empty" class="empty" data-i18n="noMoves">No lines drawn yet.</p>
+    </section>
+
+    <section class="card record" aria-labelledby="record-title">
+      <h2 id="record-title" data-i18n="record">Record against the computer</h2>
+      <div id="record-grid" class="record-grid" hidden></div>
+      <p id="record-caption" class="record-caption" data-i18n="recordCaption" hidden>won – lost – drawn</p>
+      <p id="record-empty" class="empty" data-i18n="recordEmpty">Finish a game against the computer to start your record.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a href="https://github.com/celaldrg/dots-and-boxes">MIT · <span data-i18n="sourceOnGithub">Source on GitHub</span></a>
+  </footer>
+
+  <dialog id="setup" class="setup" aria-labelledby="setup-title">
+    <form id="setup-form" class="setup-form" method="dialog">
+      <h2 id="setup-title" data-i18n="setupTitle">New game</h2>
+      <fieldset class="field">
+        <legend data-i18n="boardSize">Board size</legend>
+        <div id="size-options" class="segmented"></div>
+      </fieldset>
+      <fieldset class="field">
+        <legend data-i18n="mode">Mode</legend>
+        <div class="segmented">
+          <label class="option"><input type="radio" name="mode" value="cpu"><span data-i18n="modeCpu">Against the computer</span></label>
+          <label class="option"><input type="radio" name="mode" value="pvp"><span data-i18n="modePvp">Two players</span></label>
+        </div>
+      </fieldset>
+      <fieldset id="level-field" class="field">
+        <legend data-i18n="level">Computer level</legend>
+        <div class="segmented">
+          <label class="option"><input type="radio" name="level" value="easy"><span data-i18n="easy">Easy</span></label>
+          <label class="option"><input type="radio" name="level" value="medium"><span data-i18n="medium">Medium</span></label>
+          <label class="option"><input type="radio" name="level" value="hard"><span data-i18n="hard">Hard</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="field">
+        <legend data-i18n="starter">First move</legend>
+        <div class="segmented">
+          <label class="option"><input type="radio" name="starter" value="0"><span id="starter-0">You</span></label>
+          <label class="option"><input type="radio" name="starter" value="1"><span id="starter-1">Computer</span></label>
+        </div>
+      </fieldset>
+      <div class="dialog-actions">
+        <button id="setup-cancel" class="btn" type="button" data-i18n="cancel">Cancel</button>
+        <button id="setup-start" class="btn btn-accent" type="submit" data-i18n="start" autofocus>Start</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>
